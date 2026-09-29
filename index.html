@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emoji 混搭工坊 - 單一 HTML 版</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --line:#334155; --txt:#e2e8f0; --acc:#38bdf8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif; background:radial-gradient(1000px 600px at 50% -10%, #1e3a8a 0%, var(--bg) 60%); color:var(--txt); min-height:100vh; }
+  header { text-align:center; padding:28px 16px 8px; }
+  header h1 { margin:0; font-size:28px; letter-spacing:2px; }
+  header p { margin:8px 0 0; color:#94a3b8; font-size:14px; }
+  main { display:grid; grid-template-columns:1fr 360px; gap:20px; max-width:1100px; margin:20px auto 40px; padding:0 20px; }
+  @media (max-width:900px){ main{ grid-template-columns:1fr; } }
+  .card { background:rgba(30,41,59,.92); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:0 10px 40px rgba(0,0,0,.4); }
+  .card h2 { margin:0 0 10px; font-size:16px; color:var(--acc); letter-spacing:1px; }
+  .opt-group { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+  button.pick { font-size:28px; width:56px; height:56px; border-radius:12px; border:2px solid transparent; background:#0f172a; cursor:pointer; transition:.15s; }
+  button.pick:hover { transform:translateY(-2px); border-color:var(--acc); }
+  button.pick.active { border-color:var(--acc); background:#0c4a6e; box-shadow:0 0 12px rgba(56,189,248,.6); }
+  button.pick.small { font-size:13px; width:auto; padding:0 10px; height:36px; color:var(--txt); }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .btn { border:1px solid var(--line); background:#0f172a; color:var(--txt); border-radius:10px; padding:10px 14px; cursor:pointer; font-size:14px; }
+  .btn.primary { background:linear-gradient(135deg,#0284c7,#38bdf8); border:none; color:#fff; font-weight:bold; }
+  .btn:hover { filter:brightness(1.15); }
+  input[type="text"] { width:100%; padding:10px; border-radius:10px; border:1px solid var(--line); background:#0f172a; color:var(--txt); font-size:16px; }
+  input[type="color"] { width:56px; height:40px; border:none; background:none; cursor:pointer; }
+  /* 預覽舞台 */
+  #stage { position:relative; width:300px; height:300px; margin:0 auto; border-radius:28px; border:2px solid var(--acc); overflow:hidden; box-shadow:0 0 30px rgba(56,189,248,.35); }
+  .layer { position:absolute; left:50%; transform:translate(-50%,-50%); user-select:none; line-height:1; }
+  #L-base { top:52%; font-size:150px; z-index:1; filter:drop-shadow(0 6px 12px rgba(0,0,0,.4)); }
+  #L-top { top:24%; font-size:64px; z-index:3; }
+  #L-mid { top:48%; font-size:58px; z-index:2; mix-blend-mode:normal; }
+  #L-bot { top:76%; font-size:56px; z-index:3; }
+  #L-text { bottom:10px; top:auto; transform:translateX(-50%); font-size:20px; font-weight:bold; color:#fff; text-shadow:0 2px 6px #000; z-index:4; white-space:nowrap; }
+  .hint { font-size:13px; color:#94a3b8; line-height:1.8; }
+  #msg { min-height:22px; font-size:13px; color:#7dd3fc; text-align:center; margin-top:10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎨 Emoji 混搭工坊</h1>
+  <p>單一 HTML 檔・用 Chrome 開啟即可・多層疊加即時預覽・匯出 PNG 貼到任何軟體</p>
+</header>
+<main>
+  <div class="card">
+    <h2>1️⃣ 基底（臉 / 主體）</h2>
+    <div class="opt-group" id="g-base"></div>
+    <h2>2️⃣ 頂部配件（帽子 / 頭飾）</h2>
+    <div class="opt-group" id="g-top"></div>
+    <h2>3️⃣ 中層混搭（眼睛 / 表情疊加）</h2>
+    <div class="opt-group" id="g-mid"></div>
+    <h2>4️⃣ 底部混搭（嘴巴 / 符號 / 火焰）</h2>
+    <div class="opt-group" id="g-bot"></div>
+    <h2>🎨 背景與文字</h2>
+    <div class="row" style="margin-bottom:12px">
+      <input type="color" id="bgColor" value="#1e3a8a" title="背景顏色">
+      <button class="btn" id="bgTransparent">透明背景</button>
+      <button class="btn" id="randomBtn">🎲 隨機混搭</button>
+      <button class="btn" id="clearBtn">🧹 清除配件</button>
+    </div>
+    <input type="text" id="customText" placeholder="輸入底部文字，例如：加油、早安、OK（可留白）" maxlength="12">
+  </div>
+
+  <div class="card">
+    <h2>👀 即時預覽</h2>
+    <div id="stage">
+      <div class="layer" id="L-base">😀</div>
+      <div class="layer" id="L-top"></div>
+      <div class="layer" id="L-mid"></div>
+      <div class="layer" id="L-bot"></div>
+      <div class="layer" id="L-text"></div>
+    </div>
+    <div class="row" style="justify-content:center; margin-top:16px">
+      <button class="btn primary" id="dlBtn">⬇️ 匯出 PNG</button>
+      <button class="btn" id="copyBtn">📋 複製圖片</button>
+    </div>
+    <div id="msg">點左側按鈕更換圖層，右鍵亦可直接複製預覽圖。</div>
+    <p class="hint">
+      使用方式：<br>
+      1. 在左側挑選組合，右側即時顯示。<br>
+      2. 按「匯出 PNG」會下載 512×512 圖片檔，可插入 Word、PowerPoint、LINE 電腦版。<br>
+      3. 按「複製圖片」後，可直接到 Gmail、Notion、Discord、Word 按 Ctrl+V 貼上。<br>
+      ※ Chrome 需允許剪貼簿權限。若複製失敗，請改用匯出 PNG。
+    </p>
+  </div>
+</main>
+<script>
+const DATA = {
+  base: ["😀","😎","🥹","🤖","👻","🐱","🐶","🐼","💩","🤡"],
+  top: ["", "🎩","👑","🎧","🕶️","🌸","🔥","⭐","🎃"],
+  mid: ["", "👀","❤️","✨","💧","🔥","⭐","😍","🤩"],
+  bot: ["", "🔥","💧","🌈","⚡","🍀","💥","🎉","💋"]
+};
+const state = { base:"😀", top:"", mid:"", bot:"", bg:"#1e3a8a", transparent:false, text:"" };
+
+function buildGroup(elId, key, layerId){
+  const el = document.getElementById(elId);
+  DATA[key].forEach(v=>{
+    const b = document.createElement("button");
+    b.className = "pick" + (v==="" ? " small" : "");
+    b.textContent = v==="" ? "無" : v;
+    b.title = v==="" ? "無" : v;
+    if(state[key]===v) b.classList.add("active");
+    b.onclick = ()=>{
+      state[key]=v;
+      document.getElementById(layerId).textContent=v;
+      el.querySelectorAll(".pick").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+    };
+    el.appendChild(b);
+  });
+}
+buildGroup("g-base","base","L-base");
+buildGroup("g-top","top","L-top");
+buildGroup("g-mid","mid","L-mid");
+buildGroup("g-bot","bot","L-bot");
+
+const stage = document.getElementById("stage");
+document.getElementById("bgColor").oninput = e=>{
+  state.bg=e.target.value; state.transparent=false;
+  stage.style.background=state.bg;
+};
+document.getElementById("bgTransparent").onclick = ()=>{
+  state.transparent=true;
+  stage.style.background="repeating-conic-gradient(#334155 0% 25%, #1e293b 0% 50%) 0 0 / 24px 24px";
+};
+stage.style.background=state.bg;
+
+document.getElementById("customText").oninput = e=>{
+  state.text=e.target.value;
+  document.getElementById("L-text").textContent=state.text;
+};
+document.getElementById("randomBtn").onclick = ()=>{
+  const r=a=>a[Math.floor(Math.random()*a.length)];
+  state.base=r(DATA.base); state.top=r(DATA.top); state.mid=r(DATA.mid); state.bot=r(DATA.bot);
+  document.getElementById("L-base").textContent=state.base;
+  document.getElementById("L-top").textContent=state.top;
+  document.getElementById("L-mid").textContent=state.mid;
+  document.getElementById("L-bot").textContent=state.bot;
+  document.querySelectorAll(".opt-group").forEach(g=>g.innerHTML="");
+  buildGroup("g-base","base","L-base"); buildGroup("g-top","top","L-top");
+  buildGroup("g-mid","mid","L-mid"); buildGroup("g-bot","bot","L-bot");
+};
+document.getElementById("clearBtn").onclick = ()=>{
+  state.top=""; state.mid=""; state.bot=""; state.text="";
+  document.getElementById("L-top").textContent="";
+  document.getElementById("L-mid").textContent="";
+  document.getElementById("L-bot").textContent="";
+  document.getElementById("L-text").textContent="";
+  document.getElementById("customText").value="";
+};
+
+function drawCanvas(size){
+  const c=document.createElement("canvas"); c.width=c.height=size;
+  const x=c.getContext("2d");
+  if(!state.transparent){ x.fillStyle=state.bg; const r=size*0.11;
+    x.beginPath(); x.roundRect ? x.roundRect(0,0,size,size,r) : x.rect(0,0,size,size); x.fill();
+  }
+  x.textAlign="center"; x.textBaseline="middle";
+  x.font=`${size*0.5}px "Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+  x.fillText(state.base, size/2, size*0.52);
+  x.font=`${size*0.21}px "Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+  if(state.top) x.fillText(state.top, size/2, size*0.24);
+  if(state.mid) x.fillText(state.mid, size/2, size*0.48);
+  if(state.bot) x.fillText(state.bot, size/2, size*0.76);
+  if(state.text){ x.font=`bold ${size*0.07}px "Microsoft JhengHei",sans-serif`;
+    x.fillStyle="#fff"; x.strokeStyle="#000"; x.lineWidth=4;
+    x.strokeText(state.text, size/2, size*0.92); x.fillText(state.text, size/2, size*0.92);
+  }
+  return c;
+}
+document.getElementById("dlBtn").onclick = ()=>{
+  const c=drawCanvas(512);
+  const a=document.createElement("a");
+  a.download="emoji-mix.png"; a.href=c.toDataURL("image/png"); a.click();
+  document.getElementById("msg").textContent="已匯出 PNG，可到任何軟體插入此檔案。";
+};
+document.getElementById("copyBtn").onclick = async ()=>{
+  try{
+    const c=drawCanvas(512);
+    const blob=await new Promise(r=>c.toBlob(r,"image/png"));
+    await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);
+    document.getElementById("msg").textContent="已複製！到 LINE、Word、Gmail 按 Ctrl+V 即可貼上。";
+  }catch(e){
+    document.getElementById("msg").textContent="此瀏覽器阻擋直接複製圖片，請改用「匯出 PNG」。";
+  }
+};
+</script>
+</body>
+</html>
